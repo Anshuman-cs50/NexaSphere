@@ -645,7 +645,13 @@ app.delete('/api/admin/events/:id', adminAuth, async (req, res) => {
 
 app.get('/api/content/core-team', async (req, res) => {
   try {
-    return res.json(await listCoreTeamStore());
+    const fullTeam = await listCoreTeamStore();
+    // Strip out PII (email, whatsapp) for the unauthenticated public endpoint
+    const publicTeam = fullTeam.map(member => {
+      const { email, whatsapp, ...safeData } = member;
+      return safeData;
+    });
+    return res.json(publicTeam);
   } catch (e) {
     return res.status(500).json({ error: e?.message || 'Failed to load core team' });
   }
@@ -854,7 +860,6 @@ app.put('/api/portfolio', async (req, res) => {
 });
 
 
->>>>>>> upstream/main
 const port = Number(process.env.PORT || 8787);
 if (!process.env.VERCEL) {
   const boot = HAS_SUPABASE ? Promise.resolve() : ensureContentFile();
